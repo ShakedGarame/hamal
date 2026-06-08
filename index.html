@@ -49,7 +49,8 @@
     @keyframes floatUp{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-60px)}}
     @keyframes pop{0%{transform:translate(-50%,-50%) scale(1);opacity:1}60%{transform:translate(-50%,-50%) scale(1.6);opacity:.5}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
     @keyframes slideIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes waveIn{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+    @keyframes waveIn{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes waveOut{0%{opacity:1}100%{opacity:0;transform:translateY(-6px)}}
     @keyframes pulseRed{0%,100%{color:#fff}50%{color:var(--nr);text-shadow:0 0 20px var(--nr)}}
     @keyframes bob{0%,100%{transform:translate(-50%,-50%) translateY(0)}50%{transform:translate(-50%,-50%) translateY(-10px)}}
     @keyframes waPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
@@ -266,11 +267,10 @@
         <div style="font-size:11px;font-weight:500;color:rgba(0,255,136,.65);margin-top:4px;font-family:'Heebo',sans-serif;">⚡ עלות: 1 אנרגיה &nbsp;·&nbsp; ⏱ 60 שניות</div>
       </button>
 
-      <button class="btn-blue w-full py-3 rounded-lg text-base font-bold" onclick="showScreen('s-leaderboard');updateLB();">
-        🏆 לוח תוצאות ארצי
+      <button class="btn-blue w-full rounded-lg font-bold" onclick="showScreen('s-leaderboard');updateLB();" style="padding:10px 16px 8px;">
+        <div style="font-size:1rem;">🏆 לוח תוצאות ארצי</div>
+        <div style="font-size:10px;font-weight:400;color:rgba(0,170,255,.6);margin-top:3px;font-family:'Heebo',sans-serif;">⚠️ מתאפס כל 24 שעות · הגן על עירך היום</div>
       </button>
-
-      <p class="text-xs text-gray-600 text-center">⚠️ הלוח מתאפס כל 24 שעות. הגן על עירך היום!</p>
 
       <button class="btn-ghost w-full py-2.5 rounded-lg text-xs" onclick="devRecharge()">
         🔋 טעינת אנרגיה מלאכותית (פיתוח)
@@ -280,21 +280,18 @@
 
   <!-- ═══ מסך משחק ═══ -->
   <div id="s-game" class="screen" style="background:var(--bg);">
-    <div id="gameHUD" class="flex justify-between items-center px-4 py-2" style="position:relative;">
-      <div class="text-center w-16">
+    <div id="gameHUD" class="flex justify-between items-center px-5 py-3">
+      <div class="text-center w-20">
         <p class="text-xs text-gray-500 font-orb tracking-widest">SCORE</p>
-        <p class="text-xl font-black nb font-orb" id="g-score">0</p>
+        <p class="text-2xl font-black nb font-orb" id="g-score">0</p>
       </div>
       <div class="text-center">
         <p id="g-timer" class="font-black text-5xl font-mono-alt" style="color:var(--nr);">60</p>
         <p class="text-xs text-gray-600 font-orb tracking-widest">SEC</p>
       </div>
-      <div class="flex items-center gap-2">
-        <div class="text-center w-12">
-          <p class="text-xs text-gray-500 font-orb tracking-widest">WAVE</p>
-          <p class="text-xl font-black ng font-orb" id="g-wave">1</p>
-        </div>
-        <button onclick="quitGame()" style="background:rgba(255,50,50,.15);border:1px solid rgba(255,50,50,.4);color:#ff6666;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:900;line-height:1;" title="פרוש מהמשמרת">✕</button>
+      <div class="text-center w-20">
+        <p class="text-xs text-gray-500 font-orb tracking-widest">WAVE</p>
+        <p class="text-2xl font-black ng font-orb" id="g-wave">1</p>
       </div>
     </div>
 
@@ -312,10 +309,15 @@
     <div id="combo-display" class="hidden" style="position:absolute;top:calc(var(--hud-h,72px) + 8px);left:50%;transform:translateX(-50%);z-index:34;">
       <p class="ng font-black text-2xl font-orb">קומבו x<span id="combo-val">1</span></p>
     </div>
-    <div id="waveAnnounce" class="hidden" style="position:absolute;top:var(--hud-h,72px);left:0;right:0;bottom:0;z-index:40;display:flex;align-items:center;justify-content:center;pointer-events:none;">
-      <p id="wave-text" class="nr font-black font-orb" style="font-size:3.5rem;animation:waveIn .4s ease both;"></p>
+    <!-- Wave pill — top-right corner, doesn't block gameplay -->
+    <div id="waveAnnounce" class="hidden" style="position:absolute;top:calc(var(--hud-h,72px) + 10px);right:12px;z-index:40;pointer-events:none;">
+      <div style="background:rgba(255,26,53,.9);border:1px solid var(--nr);border-radius:20px;padding:5px 14px;box-shadow:0 0 12px rgba(255,26,53,.5);">
+        <p id="wave-text" class="font-black font-orb" style="font-size:1rem;color:#fff;white-space:nowrap;"></p>
+      </div>
     </div>
     <div id="gameArea"></div>
+    <!-- Quit button — bottom center, out of main play zone -->
+    <button id="quit-btn" onclick="quitGame()" style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:38;background:rgba(0,0,0,.5);border:1px solid rgba(255,80,80,.35);color:rgba(255,100,100,.7);border-radius:20px;padding:6px 20px;font-size:12px;font-weight:700;font-family:'Heebo',sans-serif;backdrop-filter:blur(4px);">← פרוש</button>
   </div>
 
   <!-- ═══ מסך סיכום ═══ -->
@@ -1093,10 +1095,11 @@ function flash(color,opacity){
 
 function announceWave(label){
   const el=document.getElementById('waveAnnounce'),t=document.getElementById('wave-text');
-  t.textContent='גל '+label+'!';el.classList.remove('hidden');
-  t.style.animation='none';
-  requestAnimationFrame(()=>{t.style.animation='waveIn .4s ease both';});
-  setTimeout(()=>el.classList.add('hidden'),1100);
+  t.textContent='⚡ גל '+label;
+  el.style.animation='none';el.style.opacity='1';
+  el.classList.remove('hidden');
+  setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';},900);
+  setTimeout(()=>{el.classList.add('hidden');el.style.opacity='1';el.style.transition='';},1320);
 }
 
 function getRank(score){
