@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>חמ"ל מלחמה</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;900&family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root { --nr:#ff1a35; --nb:#00aaff; --ng:#00ff88; --bg:#05050e; --card:#0b0b18; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { height:100%; overflow:hidden; background:var(--bg); }
+    body { font-family:'Heebo',sans-serif; color:#fff; }
+    .font-orb { font-family:'Orbitron',monospace; }
+    .font-mono-alt { font-family:'Share Tech Mono',monospace; }
+
+    .screen { position:fixed; inset:0; display:none; flex-direction:column; overflow-y:auto; overflow-x:hidden; }
+    .screen.active { display:flex; }
+
+    .nr { color:var(--nr); text-shadow:0 0 10px var(--nr),0 0 25px rgba(255,26,53,.5); }
+    .nb { color:var(--nb); text-shadow:0 0 10px var(--nb),0 0 25px rgba(0,170,255,.5); }
+    .ng { color:var(--ng); text-shadow:0 0 10px var(--ng),0 0 25px rgba(0,255,136,.5); }
+
+    .grid-bg {
+      background-image:linear-gradient(rgba(0,170,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,170,255,.03) 1px,transparent 1px);
+      background-size:40px 40px;
+    }
+
+    /* Radar rings */
+    @keyframes radarRing { 0%{width:0;height:0;opacity:.5;} 100%{width:280vmax;height:280vmax;opacity:0;} }
+    .radar-ring { position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(0,170,255,.12);animation:radarRing 9s ease-out infinite;pointer-events:none;z-index:0; }
+    .radar-ring:nth-child(2){animation-delay:3s;border-color:rgba(255,26,53,.08);}
+    .radar-ring:nth-child(3){animation-delay:6s;}
+
+    /* Scanner */
+    @keyframes scan{from{top:-2px;}to{top:100%;}}
+    .scanner{position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--nb),transparent);animation:scan 6s linear infinite;pointer-events:none;z-index:2;opacity:.4;}
+
+    /* Cyber cards with corner brackets */
+    .cyber-card { background:var(--card); border:1px solid rgba(0,170,255,.2); border-radius:8px; position:relative; }
+    .cyber-card::before,.cyber-card::after { content:'';position:absolute;width:14px;height:14px;border-color:var(--nb);border-style:solid; }
+    .cyber-card::before{top:-1px;right:-1px;border-width:2px 2px 0 0;border-radius:0 4px 0 0;}
+    .cyber-card::after {bottom:-1px;left:-1px; border-width:0 0 2px 2px;border-radius:0 0 0 4px;}
+    .cyber-card-red::before,.cyber-card-red::after{border-color:var(--nr);}
+    .cyber-card-green::before,.cyber-card-green::after{border-color:var(--ng);}
+
+    /* Animations */
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+    @keyframes floatUp{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-60px)}}
+    @keyframes pop{0%{transform:translate(-50%,-50%) scale(1);opacity:1}60%{transform:translate(-50%,-50%) scale(1.6);opacity:.5}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+    @keyframes slideIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes waveIn{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+    @keyframes pulseRed{0%,100%{color:#fff}50%{color:var(--nr);text-shadow:0 0 20px var(--nr)}}
+    @keyframes bob{0%,100%{transform:translate(-50%,-50%) translateY(0)}50%{transform:translate(-50%,-50%) translateY(-10px)}}
+    @keyframes waPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+    @keyframes barGrow{from{width:0}to{width:var(--w)}}
+    @keyframes tickerScroll{0%{opacity:0;transform:translateY(6px)}15%,85%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-6px)}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 18px rgba(0,255,136,.4),0 0 40px rgba(0,255,136,.15)}50%{box-shadow:0 0 32px rgba(0,255,136,.7),0 0 65px rgba(0,255,136,.3)}}
+    @keyframes alertPulse{0%,100%{opacity:1}50%{opacity:.35}}
+    /* Shimmer via background-position — no overflow:hidden needed */
+    @keyframes shimmerBg{0%{background-position:200% center}100%{background-position:-200% center}}
+
+    .shake{animation:shake .5s ease;}
+    .slide-in{animation:slideIn .35s ease both;}
+    .timer-warn{animation:pulseRed .45s infinite;}
+
+    /* Threats */
+    .threat{position:absolute;border-radius:50%;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;}
+    .threat-wolt{animation:bob .8s ease-in-out infinite;}
+    .threat-fake{animation:waPulse .65s ease-in-out infinite;}
+    .threat-ring{position:absolute;border-radius:50%;border:1px solid;pointer-events:none;transform:translate(-50%,-50%);}
+
+    /* ── Start button: shimmer via bg-position, NO overflow:hidden ── */
+    .btn-start {
+      background: linear-gradient(90deg,
+        #001800 0%, #002200 30%,
+        rgba(0,255,136,.18) 50%,
+        #002200 70%, #001800 100%);
+      background-size: 300% 100%;
+      border: 2px solid var(--ng);
+      color: var(--ng);
+      font-weight: 900;
+      font-family: 'Heebo', sans-serif;
+      animation: shimmerBg 2.8s linear infinite, pulseGlow 2.5s ease-in-out infinite;
+      transition: transform .1s;
+    }
+    .btn-start:active{transform:scale(.96);}
+
+    .btn-blue{background:linear-gradient(135deg,#001020,#001830);border:1px solid var(--nb);box-shadow:0 0 12px rgba(0,170,255,.3);color:var(--nb);font-family:'Heebo',sans-serif;font-weight:700;transition:box-shadow .15s,transform .1s;}
+    .btn-blue:active{transform:scale(.97);box-shadow:0 0 22px rgba(0,170,255,.55);}
+    .btn-ghost{background:transparent;border:1px solid #252535;color:#555;transition:border-color .15s;font-family:'Heebo',sans-serif;}
+    .btn-ghost:active{border-color:#555;}
+
+    /* Tab buttons */
+    .tab-btn{padding:.55rem .3rem;font-size:.72rem;color:#555;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;font-family:'Heebo',sans-serif;font-weight:600;}
+    .tab-btn.active{color:var(--nb);border-bottom-color:var(--nb);text-shadow:0 0 10px rgba(0,170,255,.6);}
+
+    /* Energy slots */
+    .energy-slot{height:12px;width:56px;border-radius:3px;border:1px solid #252535;transition:all .3s;}
+    .energy-slot.on{background:linear-gradient(90deg,var(--ng),#00dd77);border-color:var(--ng);box-shadow:0 0 10px var(--ng);}
+
+    /* Game HUD — always LTR */
+    #gameHUD{position:fixed;top:0;left:0;right:0;z-index:30;background:rgba(5,5,14,.93);border-bottom:1px solid rgba(255,26,53,.3);backdrop-filter:blur(6px);direction:ltr;}
+    #gameArea{position:fixed;inset:0;z-index:20;touch-action:none;}
+    #waveAnnounce{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+    #multiplierBadge{position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:35;}
+
+    /* Leaderboard bars — always LTR fill */
+    .lb-bar-wrap{height:9px;background:#111;border-radius:4px;overflow:hidden;direction:ltr;}
+    .lb-bar{height:100%;border-radius:4px;animation:barGrow .9s ease-out both;}
+
+    .rank-glow-r{border-color:#666;}
+    .rank-glow-b{border-color:var(--nb);box-shadow:0 0 20px rgba(0,170,255,.25);}
+    .rank-glow-g{border-color:var(--ng);box-shadow:0 0 20px rgba(0,255,136,.25);}
+
+    .alert-dot{width:7px;height:7px;background:var(--nr);border-radius:50%;animation:alertPulse 1s infinite;display:inline-block;margin-left:4px;}
+
+    /* ── Custom city dropdown ── */
+    .city-drop-btn {
+      width:100%; background:#000; border:1px solid #374151; border-radius:6px;
+      padding:11px 14px; color:#9ca3af; text-align:right;
+      display:flex; justify-content:space-between; align-items:center;
+      font-family:'Heebo',sans-serif; font-size:16px; cursor:pointer;
+      transition:border-color .2s;
+    }
+    .city-drop-btn:focus,.city-drop-btn.open{border-color:var(--nb);box-shadow:0 0 0 1px var(--nb);}
+    .city-drop-btn.selected{color:#fff;}
+    .city-drop-arrow{color:var(--nb);transition:transform .25s;font-size:.9rem;flex-shrink:0;margin-right:8px;}
+    .city-drop-arrow.open{transform:rotate(180deg);}
+
+    .city-drop-list {
+      position:absolute; top:calc(100% + 6px); right:0; left:0;
+      background:#0d0d1e; border:1px solid rgba(0,170,255,.4); border-radius:8px;
+      max-height:52vh; overflow-y:auto; z-index:500;
+      box-shadow:0 12px 40px rgba(0,0,0,.9);
+      display:none;
+    }
+    .city-drop-list.open{display:block;}
+    .city-group-header {
+      padding:6px 14px 4px; font-size:.7rem; font-weight:700; color:#4b5563;
+      background:#0d0d1e; position:sticky; top:0; z-index:1;
+      border-bottom:1px solid #1a1a2e; letter-spacing:.04em;
+    }
+    .city-option {
+      width:100%; text-align:right; padding:10px 14px;
+      font-family:'Heebo',sans-serif; font-size:.95rem; color:#d1d5db;
+      border-bottom:1px solid #111827; cursor:pointer; transition:background .12s;
+      display:block;
+    }
+    .city-option:hover,.city-option:active{background:rgba(0,170,255,.12);color:#fff;}
+    .city-option.active-city{color:var(--ng);font-weight:700;}
+
+    /* Search inside dropdown */
+    .city-search-wrap {
+      position:sticky; top:0; z-index:2; background:#0d0d1e;
+      padding:8px 10px; border-bottom:1px solid #1a1a2e;
+    }
+    .city-search-input {
+      width:100%; background:#0a0a1a; border:1px solid #374151; border-radius:6px;
+      padding:8px 10px; color:#fff; font-family:'Heebo',sans-serif; font-size:15px;
+      text-align:right; direction:rtl; outline:none;
+      transition:border-color .2s;
+    }
+    .city-search-input:focus{border-color:var(--nb);}
+    .city-search-input::placeholder{color:#4b5563;}
+    .city-no-results{padding:14px;text-align:center;color:#4b5563;font-size:.85rem;}
+
+    /* Scrollbar for dropdown */
+    .city-drop-list::-webkit-scrollbar{width:4px;}
+    .city-drop-list::-webkit-scrollbar-track{background:#0d0d1e;}
+    .city-drop-list::-webkit-scrollbar-thumb{background:var(--nb);border-radius:4px;}
+
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-track{background:#0b0b18;}
+    ::-webkit-scrollbar-thumb{background:var(--nb);border-radius:4px;}
+
+    input{font-family:'Heebo',sans-serif !important;}
+  </style>
+</head>
+<body class="grid-bg select-none">
+  <div class="radar-ring"></div>
+  <div class="radar-ring"></div>
+  <div class="radar-ring"></div>
+  <div class="scanner"></div>
+  <div id="flashOverlay" style="position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0;background:rgba(255,0,50,.38);transition:opacity .08s;"></div>
+
+  <!-- ═══ מסך פתיחה ═══ -->
+  <div id="s-welcome" class="screen active" style="z-index:3;">
+    <div class="flex flex-col min-h-full p-4 gap-3 pb-10" style="position:relative;z-index:1;">
+
+      <!-- כותרת -->
+      <div class="text-center pt-6 pb-1">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <span class="alert-dot"></span>
+          <span class="text-xs text-gray-500 font-mono-alt">משרד הביטחון // מסווג</span>
+          <span class="alert-dot"></span>
+        </div>
+        <h1 class="nr font-orb text-4xl font-black tracking-wider">חמ"ל מלחמה</h1>
+        <p class="nb text-xs tracking-widest mt-0.5 font-orb">WAR ROOM ISRAEL</p>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--nr),transparent);margin:.6rem auto 0;width:140px;"></div>
+      </div>
+
+      <!-- פרטי מפעיל -->
+      <div class="cyber-card p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-lg">👤</span>
+          <span class="text-sm font-bold text-gray-300">פרטי מפעיל</span>
+        </div>
+
+        <label class="text-xs text-gray-500 block mb-1">שם קוד מבצעי</label>
+        <input id="inp-name" type="text" maxlength="20" placeholder="הזן שם קוד..."
+          autocomplete="off" dir="rtl"
+          class="w-full bg-black border border-gray-700 rounded-md px-3 py-2.5 text-white mb-4 focus:border-blue-400 focus:outline-none"
+          style="font-size:16px;" />
+
+        <label class="text-xs text-gray-500 block mb-1">בסיס מבצעי — עיר</label>
+        <!-- hidden input keeps the value for the rest of the JS -->
+        <input type="hidden" id="inp-city">
+        <!-- custom dropdown -->
+        <div style="position:relative;" id="city-drop-wrap">
+          <button type="button" id="city-drop-btn" class="city-drop-btn" onclick="toggleCityDrop(event)">
+            <span id="city-drop-label">— בחר עיר —</span>
+            <span id="city-drop-arrow" class="city-drop-arrow">▾</span>
+          </button>
+          <div id="city-drop-list" class="city-drop-list">
+            <div class="city-search-wrap">
+              <input type="text" id="city-search" class="city-search-input"
+                placeholder="🔍 חפש עיר או יישוב..."
+                autocomplete="off" oninput="filterCityDrop(this.value)" onclick="event.stopPropagation()">
+            </div>
+            <div id="city-options-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- אנרגיה -->
+      <div class="cyber-card p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-bold text-gray-300">⚡ כשירות מבצעית</span>
+          <span id="energy-label" class="text-sm font-bold ng">3/3 פעיל</span>
+        </div>
+        <div class="flex gap-2 mb-2" id="energy-slots"></div>
+        <p id="recharge-eta" class="text-xs text-gray-600"></p>
+      </div>
+
+      <!-- סטטיסטיקה -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="cyber-card p-3 text-center">
+          <p class="text-xs text-gray-500 mb-1">🏆 שיא אישי</p>
+          <p class="text-2xl font-black nb font-orb" id="w-best">0</p>
+        </div>
+        <div class="cyber-card p-3 text-center">
+          <p class="text-xs text-gray-500 mb-1">🏙️ דירוג עיר</p>
+          <p class="text-2xl font-black ng font-orb" id="w-rank">#—</p>
+        </div>
+      </div>
+
+      <!-- כפתור התחלה -->
+      <button class="btn-start w-full py-4 rounded-lg text-xl font-black" id="btn-start" onclick="startGame()">
+        ▶ התחל משמרת בחמ"ל ▶
+      </button>
+      <p class="text-xs text-gray-600 text-center -mt-1">⚡ עלות: 1 אנרגיה &nbsp;·&nbsp; ⏱ 60 שניות</p>
+
+      <button class="btn-blue w-full py-3 rounded-lg text-base font-bold" onclick="showScreen('s-leaderboard');updateLB();">
+        🏆 לוח תוצאות ארצי
+      </button>
+
+      <p class="text-xs text-gray-600 text-center">⚠️ הלוח מתאפס כל 24 שעות. הגן על עירך היום!</p>
+
+      <button class="btn-ghost w-full py-2.5 rounded-lg text-xs" onclick="devRecharge()">
+        🔋 טעינת אנרגיה מלאכותית (פיתוח) — בד"כ מתמלאת כל 30 דקות
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ מסך משחק ═══ -->
+  <div id="s-game" class="screen" style="background:var(--bg);">
+    <div id="gameHUD" class="flex justify-between items-center px-5 py-3">
+      <div class="text-center w-20">
+        <p class="text-xs text-gray-500 font-orb tracking-widest">SCORE</p>
+        <p class="text-2xl font-black nb font-orb" id="g-score">0</p>
+      </div>
+      <div class="text-center">
+        <p id="g-timer" class="font-black text-5xl font-mono-alt" style="color:var(--nr);">60</p>
+        <p class="text-xs text-gray-600 font-orb tracking-widest">SEC</p>
+      </div>
+      <div class="text-center w-20">
+        <p class="text-xs text-gray-500 font-orb tracking-widest">WAVE</p>
+        <p class="text-2xl font-black ng font-orb" id="g-wave">1</p>
+      </div>
+    </div>
+
+    <div id="multiplierBadge" class="hidden">
+      <div class="font-black px-4 py-1.5 rounded-full text-sm border-2" style="background:#cc3300;color:#fff;border-color:#ff6600;">
+        🚀 יירוט x2! &nbsp;<span id="mult-cd">5</span>שנ'
+      </div>
+    </div>
+    <div id="shieldBadge" class="hidden" style="position:fixed;top:72px;right:12px;z-index:35;">
+      <div class="font-black px-3 py-1.5 rounded-full text-sm border-2" style="background:#003366;color:#00aaff;border-color:#00aaff;">
+        🛡️ מגן פעיל
+      </div>
+    </div>
+    <div id="combo-display" class="fixed hidden" style="top:74px;left:50%;transform:translateX(-50%);z-index:35;">
+      <p class="ng font-black text-2xl font-orb">קומבו x<span id="combo-val">1</span></p>
+    </div>
+    <div id="gameArea"></div>
+    <div id="waveAnnounce" class="hidden">
+      <p id="wave-text" class="nr font-black font-orb" style="font-size:3.5rem;animation:waveIn .4s ease both;"></p>
+    </div>
+  </div>
+
+  <!-- ═══ מסך סיכום ═══ -->
+  <div id="s-summary" class="screen" style="z-index:3;">
+    <div class="flex flex-col min-h-full p-4 gap-3 pb-10" style="position:relative;z-index:1;">
+      <div class="text-center pt-5">
+        <p class="text-xs text-gray-500 font-mono-alt">// סיכום משימה //</p>
+        <h2 class="nr font-orb text-2xl font-black tracking-wider mt-1">המשמרת הסתיימה!</h2>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--nr),transparent);margin:.5rem auto;width:130px;"></div>
+      </div>
+      <div class="cyber-card cyber-card-red p-6 text-center slide-in">
+        <p class="text-xs text-gray-500 mb-2">ניקוד סופי</p>
+        <p class="text-6xl font-black nb font-orb" id="s-score">0</p>
+        <p class="text-sm mt-2 font-bold" id="s-record"></p>
+      </div>
+      <div id="rank-card" class="cyber-card p-5 text-center slide-in" style="animation-delay:.1s;">
+        <p class="text-xs text-gray-500 mb-2">🎖️ הדרגה שהוענקה לך</p>
+        <p class="text-5xl mb-2" id="rank-emoji">☕</p>
+        <p class="text-xl font-black mb-1" id="rank-title"></p>
+        <p class="text-sm text-gray-400" id="rank-sub"></p>
+      </div>
+      <div class="grid grid-cols-3 gap-2 slide-in" style="animation-delay:.2s;">
+        <div class="cyber-card p-3 text-center"><p class="text-xs text-gray-500 mb-1">✅ נוטרלו</p><p class="text-2xl font-black ng font-orb" id="s-hit">0</p></div>
+        <div class="cyber-card p-3 text-center"><p class="text-xs text-gray-500 mb-1">💥 פוספסו</p><p class="text-2xl font-black nr font-orb" id="s-miss">0</p></div>
+        <div class="cyber-card p-3 text-center"><p class="text-xs text-gray-500 mb-1">✈️ יירוטים שגויים</p><p class="text-2xl font-black font-orb" style="color:orange;" id="s-fake">0</p></div>
+      </div>
+      <div class="cyber-card p-3 slide-in" style="border-color:rgba(0,170,255,.3);animation-delay:.3s;">
+        <p class="text-xs nb mb-1">🏙️ תרומה לעיר</p>
+        <p class="text-sm text-gray-300 font-bold" id="s-city-note"></p>
+      </div>
+      <div class="space-y-3 slide-in" style="animation-delay:.4s;">
+        <button id="btn-again" class="btn-start w-full py-4 rounded-lg text-lg font-black" onclick="startGame()">▶ שחק שוב ▶</button>
+        <button class="btn-blue w-full py-3 rounded-lg font-bold" onclick="showScreen('s-leaderboard');updateLB();">🏆 לוח תוצאות</button>
+        <button class="btn-ghost w-full py-3 rounded-lg mb-4" onclick="showScreen('s-welcome');">← חזרה לבסיס</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ לוח תוצאות ═══ -->
+  <div id="s-leaderboard" class="screen" style="z-index:3;">
+    <div class="flex flex-col min-h-full" style="position:relative;z-index:1;">
+      <div class="text-center pt-5 px-4 pb-3">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <span class="alert-dot"></span>
+          <span class="text-xs text-gray-500 font-mono-alt">מידע חי · מתעדכן בזמן אמת</span>
+          <span class="alert-dot"></span>
+        </div>
+        <h2 class="nb font-orb text-2xl font-black tracking-wider">🏆 לוח תוצאות</h2>
+        <div style="height:1px;background:linear-gradient(90deg,transparent,var(--nb),transparent);margin:.5rem auto;width:130px;"></div>
+      </div>
+      <div class="flex border-b px-4" style="border-color:rgba(255,255,255,.08);">
+        <button class="tab-btn flex-1 active" id="tab-city" onclick="switchTab('city')">🏙️ עיר מול עיר</button>
+        <button class="tab-btn flex-1" id="tab-squad" onclick="switchTab('squad')">👥 הצוות שלי</button>
+        <button class="tab-btn flex-1" id="tab-national" onclick="switchTab('national')">🌐 ארצי</button>
+      </div>
+      <div class="flex-1 overflow-y-auto px-4 pb-4">
+        <div id="tc-city">
+          <div class="flex items-center justify-between mt-3 mb-3">
+            <span class="text-xs text-gray-600">⏳ איפוס בעוד: <span id="reset-cd" class="nr font-mono-alt">--:--:--</span></span>
+            <span class="text-xs text-gray-600">ניקוד מצטבר יומי</span>
+          </div>
+          <div id="lb-city" class="space-y-3"></div>
+          <div class="rounded-lg border p-3 mt-4" style="background:#0a0005;border-color:rgba(255,26,53,.25);">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="alert-dot" style="width:5px;height:5px;"></span>
+              <span class="text-xs text-gray-500">עדכון שידור חי</span>
+            </div>
+            <p id="ticker" class="text-sm font-bold" style="color:var(--nr);min-height:1.4rem;"></p>
+          </div>
+        </div>
+        <div id="tc-squad" class="hidden">
+          <p class="text-xs text-gray-600 text-center mt-3 mb-3">ביצועי הכיתה שלך</p>
+          <div id="lb-squad" class="space-y-2"></div>
+          <button class="btn-blue w-full py-3 rounded-lg font-bold mt-4" onclick="genInvite()">📲 צור קישור הזמנה לוואטסאפ</button>
+          <div id="invite-box" class="hidden cyber-card p-3 mt-3" style="border-color:rgba(0,255,136,.25);">
+            <p class="text-xs text-gray-500 mb-2">🔗 קישור הזמנה:</p>
+            <p class="text-xs ng font-mono-alt break-all mb-3" id="invite-link"></p>
+            <div class="flex gap-2">
+              <button onclick="openWhatsApp()" class="flex-1 py-2 rounded-lg font-bold text-sm" style="background:#25D366;color:#fff;border:none;">💬 פתח וואטסאפ</button>
+              <button onclick="copyInvite()" id="copy-btn" class="flex-1 py-2 rounded-lg font-bold text-sm" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);">📋 העתק קישור</button>
+            </div>
+          </div>
+        </div>
+        <div id="tc-national" class="hidden">
+          <p class="text-xs text-gray-600 text-center mt-3 mb-3">המפעילים המובילים בארץ</p>
+          <div id="lb-national" class="space-y-2"></div>
+        </div>
+      </div>
+      <div class="px-4 pb-6">
+        <button class="btn-ghost w-full py-3 rounded-lg" onclick="showScreen('s-welcome');">← חזרה לבסיס</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ─── רשימת כל הערים והיישובים בישראל (ממויינת לפי א"ב) ───────────────────
+const ALL_CITIES = [
+  'אבו ג\'ווייעד (שבט)','אבו גוש','אבו סנאן','אבו סריחאן (שבט)','אבו עבדון (שבט)','אבו עמאר (שבט)',
+  'אבו עמרה (שבט)','אבו קורינאת (שבט)','אבו קרינאת (יישוב)','אבו רובייעה (שבט)','אבו רוקייק (שבט)','אבו תלול',
+  'אבטין','אבטליון','אביאל','אביבים','אביגדור','אביגיל',
+  'אביחיל','אביטל','אביעזר','אבירים','אבן יהודה','אבן מנחם',
+  'אבן ספיר','אבן שמואל','אבני איתן','אבני חפץ','אבשלום','אדורה',
+  'אדוריים','אדירים','אדמית','אדרת','אובנת','אודים',
+  'אודם','אוהד','אום אל-פחם','אום אל-קוטוף','אום בטין','אומן',
+  'אומץ','אופקים','אור הגנוז','אור הנר','אור יהודה','אור עקיבא',
+  'אורה','אורות','אורטל','אורים','אורנים','אורנית',
+  'אושה','אזור','אחווה','אחוזם','אחוזת ברק','אחיה',
+  'אחיהוד','אחיטוב','אחיסמך','אחיעזר','אטרש (שבט)','איבי הנחל',
+  'איבים','אייל','איילת השחר','אילון','אילות','אילניה',
+  'אילת','אירוס','איתמר','איתן','איתנים','אכסאל',
+  'אל סייד','אל-עזי','אל-עריאן','אל-רום','אלומה','אלומות',
+  'אלון','אלון הגליל','אלון מורה','אלון שבות','אלוני אבא','אלוני הבשן',
+  'אלוני יצחק','אלונים','אלי-עד','אליאב','אליכין','אליפז',
+  'אליפלט','אליקים','אלישיב','אלישמע','אלמגור','אלמוג',
+  'אלעד','אלעזר','אלפי מנשה','אלקוש','אלקנה','אמונים',
+  'אמירים','אמנון','אמציה','אניעם','אסד (שבט)','אספר',
+  'אעבלין','אעצם (שבט)','אפיניש (שבט)','אפיק','אפיקים','אפק',
+  'אפרת','ארבל','ארגמן','ארז','אריאל','ארסוף',
+  'אשבול','אשבל','אשדוד','אשדות יעקב (איחוד)','אשדות יעקב (מאוחד)','אשחר',
+  'אשכולות','אשל הנשיא','אשלים','אשקלון','אשרת','אשתאול',
+  'אתגר','באקה אל-גרביה','באר אורה','באר גנים','באר טוביה','באר יעקב',
+  'באר מילכה','באר שבע','בארות יצחק','בארותיים','בארי','בוסתן הגליל',
+  'בועיינה-נוג\'ידאת','בוקעאתא','בורגתה','בחן','בטחה','ביצרון',
+  'ביר אל-מכסור','ביר הדאג\'','ביריה','בית אורן','בית אל','בית אלעזרי',
+  'בית אלפא','בית אריה','בית ברל','בית ג\'ן','בית גוברין','בית גמליאל',
+  'בית דגן','בית הגדי','בית הלוי','בית הלל','בית העמק','בית הערבה',
+  'בית השיטה','בית זיד','בית זית','בית זרע','בית חוגלה','בית חורון',
+  'בית חירות','בית חלקיה','בית חנן','בית חנניה','בית חשמונאי','בית יהושע',
+  'בית יוסף','בית ינאי','בית יצחק-שער חפר','בית יתיר','בית לחם הגלילית','בית מאיר',
+  'בית נחמיה','בית ניר','בית נקופה','בית עובד','בית עוזיאל','בית עזרא',
+  'בית עריף','בית צבי','בית קמה','בית קשת','בית רבן','בית רימון',
+  'בית שאן','בית שמש','בית שערים','בית שקמה','ביתן אהרן','ביתר עילית',
+  'בלפוריה','בן זכאי','בן עמי','בן שמן (כפר נוער)','בן שמן (מושב)','בני ברק',
+  'בני דקלים','בני דרום','בני דרור','בני יהודה','בני נצרים','בני עטרות',
+  'בני עי"ש','בני ציון','בני ראם','בניה','בנימינה-גבעת עדה','בסמ"ה',
+  'בסמת טבעון','בענה','בצרה','בצת','בקוע','בקעות',
+  'בר גיורא','בר יוחאי','בר כוכבא','ברוכין','ברור חיל','ברוש',
+  'ברוש הבקעה','ברכה','ברכיה','ברעם','ברק','ברקאי',
+  'ברקן','ברקת','בת הדר','בת חן','בת חפר','בת ים',
+  'בת עין','בת שלמה','בתרון','ג\'דיידה-מכר','ג\'ולס','ג\'לג\'וליה',
+  'ג\'נאביב (שבט)','ג\'סר א-זרקא','ג\'ש (גוש חלב)','ג\'ת','גאולי תימן','גאולים',
+  'גאליה','גבולות','גבים','גבע','גבע בנימין','גבע כרמל',
+  'גבעולים','גבעון החדשה','גבעות','גבעות בר','גבעות הרואה','גבעות עדן',
+  'גבעת אבני','גבעת אלה','גבעת ברנר','גבעת השלושה','גבעת זאב','גבעת ח"ן',
+  'גבעת חיים (איחוד)','גבעת חיים (מאוחד)','גבעת יואב','גבעת יערים','גבעת ישעיהו','גבעת כ"ח',
+  'גבעת ניל"י','גבעת עוז','גבעת שמואל','גבעת שמש','גבעת שפירא','גבעתי',
+  'גבעתיים','גברעם','גבת','גדות','גדיש','גדעונה',
+  'גדרה','גודר','גונן','גורן','גורנות הגליל','גזית',
+  'גזר','גיאה','גיבתון','גיזו','גילון','גילת',
+  'גינוסר','גיניגר','גינתון','גיתה','גיתית','גלאון',
+  'גלגל','גליל ים','גלעד (אבן יצחק)','גמזו','גן הדרום','גן השומרון',
+  'גן חיים','גן יאשיה','גן יבנה','גן נר','גן שורק','גן שלמה',
+  'גן שמואל','גנות','גנות הדר','גני הדר','גני טל','גני יוחנן',
+  'גני מודיעין','גני עם','גני תקווה','גנים','געש','געתון',
+  'גפן','גרופית','גשור','גשר','גשר הזיו','גת (קיבוץ)',
+  'גת רימון','דאלית אל-כרמל','דבורה','דבוריה','דביר','דברת',
+  'דגניה א\'','דגניה ב\'','דוב"ב','דולב','דור','דורות',
+  'דחי','דייר אל-אסד','דייר חנא','דייר ראפאת','דימונה','דישון',
+  'דליה','דלתון','דמיידה','דן','דפנה','דקל',
+  'דריג\'את','האון','הבונים','הגושרים','הדר עם','הוד השרון',
+  'הודיה','הודיות','הוואשלה (שבט)','הוזייל (שבט)','הושעיה','הזורע',
+  'הזורעים','החותרים','היוגב','הילה','המעפיל','הסוללים',
+  'העוגן','הר אדר','הר גילה','הר עמשא','הראל','הרדוף',
+  'הרצליה','הררית','ורד יריחו','ורדון','זבארגה (שבט)','זבדיאל',
+  'זוהר','זיקים','זיתן','זכרון יעקב','זכריה','זמר',
+  'זמרת','זנוח','זרועה','זרזיר','זרחיה','ח\'ואלד',
+  'ח\'ואלד (שבט)','חבצלת השרון','חבר','חברון','חגור','חגי',
+  'חגלה','חד-נס','חדיד','חדרה','חוג\'ייראת (ד\'הרה)','חולדה',
+  'חולון','חולית','חולתה','חומש','חוסן','חוסנייה',
+  'חופית','חוקוק','חורה','חורפיש','חורשים','חזון',
+  'חיבת ציון','חיננית','חיפה','חירות','חלוץ','חלץ',
+  'חמאם','חמד','חמדיה','חמדת','חמרה','חניאל',
+  'חניתה','חנתון','חספין','חפץ חיים','חפצי-בה','חצב',
+  'חצבה','חצור הגלילית','חצור-אשדוד','חצרים','חרב לאת','חרוצים',
+  'חריש','חרמש','חרשה','חרשים','חשמונאים','טבריה',
+  'טובא-זנגריה','טורעאן','טייבה','טייבה (בעמק)','טירה','טירת יהודה',
+  'טירת כרמל','טירת צבי','טל מנשה','טל שחר','טל-אל','טללים',
+  'טלמון','טמרה','טמרה (יזרעאל)','טנא','טפחות','יאנוח-ג\'ת',
+  'יבול','יבנאל','יבנה','יגור','יגל','יד בנימין',
+  'יד השמונה','יד חנה','יד מרדכי','יד נתן','יד רמב"ם','ידידה',
+  'יהוד-מונוסון','יהל','יובל','יובלים','יודפת','יונדב',
+  'יונתן','יושיביה','יזרעאל','יחיעם','יטבתה','ייט"ב',
+  'יכיני','ינוב','ינון','יסוד המעלה','יסודות','יסעור',
+  'יעד','יעל','יעף','יערה','יפיע','יפית',
+  'יפעת','יפתח','יצהר','יציץ','יקום','יקיר',
+  'יקנעם (מושבה)','יקנעם עילית','יראון','ירדנה','ירוחם','ירושלים',
+  'ירחיב','ירכא','ירקונה','ישע','ישעי','ישרש',
+  'יתד','כאבול','כאוכב אבו אל-היג\'א','כברי','כדורי','כדים',
+  'כדיתה','כוכב השחר','כוכב יאיר-צור יגאל','כוכב יעקב','כוכב מיכאל','כורזים',
+  'כחל','כחלה','כיסופים','כישור','כליל','כלנית',
+  'כמאנה','כמהין','כמון','כנות','כנף','כנפי שחר',
+  'כנרת (מושבה)','כנרת (קבוצה)','כסיפה','כסלון','כסרא-סמיע','כעביה-טבאש-חג\'אג\'רה',
+  'כפר אביב','כפר אדומים','כפר אוריה','כפר אחים','כפר ביאליק','כפר ביל"ו',
+  'כפר בלום','כפר בן נון','כפר ברא','כפר ברוך','כפר גדעון','כפר גלים',
+  'כפר גליקסון','כפר גלעדי','כפר דניאל','כפר האורנים','כפר החורש','כפר המכבי',
+  'כפר הנגיד','כפר הנוער הדתי','כפר הנשיא','כפר הס','כפר הרא"ה','כפר הרי"ף',
+  'כפר ויתקין','כפר ורבורג','כפר ורדים','כפר זוהרים','כפר זיתים','כפר חב"ד',
+  'כפר חושן','כפר חיטים','כפר חיים','כפר חנניה','כפר חסידים א\'','כפר חסידים ב\'',
+  'כפר חרוב','כפר טרומן','כפר יאסיף','כפר ידידיה','כפר יהושע','כפר יונה',
+  'כפר יחזקאל','כפר יעבץ','כפר כמא','כפר כנא','כפר מונש','כפר מימון',
+  'כפר מל"ל','כפר מנדא','כפר מנחם','כפר מסריק','כפר מצר','כפר מרדכי',
+  'כפר נטר','כפר סאלד','כפר סבא','כפר סילבר','כפר סירקין','כפר עבודה',
+  'כפר עזה','כפר עציון','כפר פינס','כפר קאסם','כפר קיש','כפר קרע',
+  'כפר ראש הנקרה','כפר רוזנואלד (זרעית)','כפר רופין','כפר רות','כפר שמאי','כפר שמואל',
+  'כפר שמריהו','כפר תבור','כפר תפוח','כרכום','כרם ביבנה (ישיבה)','כרם בן זמרה',
+  'כרם בן שמן','כרם מהר"ל','כרם רעים','כרם שלום','כרמי יוסף','כרמי צור',
+  'כרמי קטיף','כרמיאל','כרמיה','כרמים','כרמל','לבון',
+  'לביא','לבנים','להב','להבות הבשן','להבות חביבה','להבים',
+  'לוד','לוזית','לוחמי הגיטאות','לוטם','לוטן','לח"י',
+  'לימן','לכיש','לפיד','לפידות','לקיה','לשם',
+  'מאור','מאיר שפיה','מבוא ביתר','מבוא דותן','מבוא חורון','מבוא חמה',
+  'מבוא מודיעים','מבואות ים','מבואות יריחו','מבועים','מבטחים','מבקיעים',
+  'מבשרת ציון','מג\'ד אל-כרום','מג\'דל שמס','מגאר','מגדים','מגדל',
+  'מגדל העמק','מגדל עוז','מגדלים','מגידו','מגל','מגן',
+  'מגן שאול','מגרון','מגשימים','מדרך עוז','מדרשת בן גוריון','מדרשת רופין',
+  'מודיעין עילית','מודיעין-מכבים-רעות','מולדת','מוצא עילית','מוקייבלה','מורן',
+  'מורשת','מזור','מזכרת בתיה','מזרע','מזרעה','מחולה',
+  'מחנה הילה','מחנה טלי','מחנה יהודית','מחנה יוכבד','מחנה יפה','מחנה יתיר',
+  'מחנה מרים','מחנה תל נוף','מחניים','מחסיה','מטולה','מטע',
+  'מי עמי','מיטב','מיטל','מייסר','מיצר','מירב',
+  'מירון','מישר','מיתר','מכורה','מכחול','מכמורת',
+  'מכמנים','מלאה','מלילות','מלכיה','מנוחה','מנוף',
+  'מנות','מנחמיה','מנרה','מנשית זבדה','מסד','מסדה',
+  'מסילות','מסילת ציון','מסלול','מסעדה','מסעודין אל-עזאזמה','מעברות',
+  'מעגלים','מעגן','מעגן מיכאל','מעוז','מעוז חיים','מעון',
+  'מעונה','מעיליא','מעין ברוך','מעין צבי','מעלה אדומים','מעלה אפרים',
+  'מעלה גלבוע','מעלה גמלא','מעלה החמישה','מעלה לבונה','מעלה מכמש','מעלה עירון',
+  'מעלה עמוס','מעלות-תרשיחא','מענית','מעש','מפלסים','מצובה',
+  'מצוקי ארץ','מצליח','מצפה','מצפה אבי"ב','מצפה אילן','מצפה זיף',
+  'מצפה יריחו','מצפה נטופה','מצפה רמון','מצפה שלם','מצר','מקווה ישראל',
+  'מרגליות','מרום גולן','מרחב עם','מרחביה (מושב)','מרחביה (קיבוץ)','מרכז שפירא',
+  'משאבי שדה','משגב דב','משגב עם','משהד','משואה','משואות יצחק',
+  'משכיות','משמר איילון','משמר דוד','משמר הירדן','משמר הנגב','משמר העמק',
+  'משמר השבעה','משמר השרון','משמר יהודה','משמרות','משמרת','משען',
+  'מתן','מתת','מתתיהו','נאות גולן','נאות הכיכר','נאות מרדכי',
+  'נאות סמדר','נאעורה','נבטים','נגבה','נגוהות','נהורה',
+  'נהלל','נהריה','נוב','נוגה','נוה צוף','נווה',
+  'נווה אבות','נווה אור','נווה אטי"ב','נווה אילן','נווה איתן','נווה גדיד',
+  'נווה דניאל','נווה זוהר','נווה זיו','נווה חריף','נווה ים','נווה ימין',
+  'נווה ירק','נווה מבטח','נווה מיכאל','נווה שלום','נועם','נוף איילון',
+  'נוף הגליל','נופי פרת','נופים','נופית','נופך','נוקדים',
+  'נורדיה','נורית','נזר שומרון','נחושה','נחל עוז','נחלה',
+  'נחליאל','נחלים','נחם','נחף','נחשולים','נחשון',
+  'נחשונים','נטועה','נטור','נטע','נטעים','נטף',
+  'ניין','ניל"י','ניצן','ניצן ב\'','ניצנה (קהילת חינוך)','ניצני סיני',
+  'ניצני עוז','ניצנים','ניר אליהו','ניר בנים','ניר גלים','ניר דוד (תל עמל)',
+  'ניר ח"ן','ניר יפה','ניר יצחק','ניר ישראל','ניר משה','ניר עוז',
+  'ניר עם','ניר עציון','ניר עקיבא','ניר צבי','נירים','נירית',
+  'נמרוד','נס הרים','נס עמים','נס ציונה','נעורים','נעלה',
+  'נעמ"ה','נען','נערן','נצאצרה (שבט)','נצר חזני','נצר סרני',
+  'נצרת','נריה','נשר','נתיב הגדוד','נתיב הל"ה','נתיב העשרה',
+  'נתיב השיירה','נתיבות','נתניה','סאג\'ור','סאסא','סביון',
+  'סגולה','סואעד (חמירה)','סואעד (כמאנה) (שבט)','סולם','סוסיה','סופה',
+  'סח\'נין','סייד (שבט)','סלמה','סלעית','סמר','סנסנה',
+  'סעד','סעוה','סער','ספיר','סתריה','ע\'ג\'ר',
+  'עבדון','עברון','עגור','עדי','עדי עד','עדנים',
+  'עוזה','עוזייר','עולש','עומר','עופר','עופרה',
+  'עוצם','עוקבי (בנו עוקבה)','עזוז','עזר','עזריאל','עזריה',
+  'עזריקם','עטאוונה (שבט)','עטרת','עיבל','עידן','עיילבון',
+  'עיינות','עילוט','עין איילה','עין אל-אסד','עין גב','עין גדי',
+  'עין דור','עין הבשור','עין הוד','עין החורש','עין המפרץ','עין הנצי"ב',
+  'עין העמק','עין השופט','עין השלושה','עין ורד','עין זיוון','עין חוד',
+  'עין חצבה','עין חרוד (איחוד)','עין חרוד (מאוחד)','עין יהב','עין יעקב','עין כרם-בי"ס חקלאי',
+  'עין כרמל','עין מאהל','עין נקובא','עין עירון','עין צורים','עין קנייא',
+  'עין ראפה','עין שמר','עין שריד','עין תמר','עינת','עיר אובות',
+  'עכו','עלומים','עלי','עלי זהב','עלמה','עלמון',
+  'עמוקה','עמיחי','עמינדב','עמיעד','עמיעוז','עמיקם',
+  'עמיר','עמנואל','עמקה','ענב','עספיא','עפולה',
+  'עצמון שגב','עראבה','עראמשה','ערב אל נעים','ערד','ערוגות',
+  'ערערה','ערערה-בנגב','עשהאל','עשרת','עתלית','עתניאל',
+  'פארן','פדואל','פדויים','פדיה','פוריה - כפר עבודה','פוריה - נווה עובד',
+  'פוריה עילית','פוריידיס','פורת','פטיש','פלך','פלמחים',
+  'פני חבר','פסגות','פסוטה','פעמי תש"ז','פצאל','פקיעין (בוקייעה)',
+  'פקיעין חדשה','פרדס חנה-כרכור','פרדסיה','פרוד','פרזון','פרי גן',
+  'פרשים','פתח תקווה','פתחיה','צאלים','צביה','צבעון',
+  'צובה','צוחר','צופיה','צופים','צופית','צופר',
+  'צוקי ים','צוקים','צור הדסה','צור יצחק','צור משה','צור נתן',
+  'צוריאל','צורית','ציפורי','צלפון','צנדלה','צפריה',
+  'צפרירים','צפת','צרופה','צרעה','קבועה (שבט)','קבוצת יבנה',
+  'קדומים','קדימה-צורן','קדם ערבה','קדמה','קדמת צבי','קדר',
+  'קדרון','קדרים','קודייראת א-צאנע(שבט)','קוואעין (שבט)','קוממיות','קורנית',
+  'קטורה','קיסריה','קלחים','קליה','קלנסווה','קלע',
+  'קציר','קצר א-סר','קצרין','קרית אונו','קרית ארבע','קרית אתא',
+  'קרית ביאליק','קרית גת','קרית טבעון','קרית ים','קרית יערים','קרית יערים(מוסד)',
+  'קרית מוצקין','קרית מלאכי','קרית נטפים','קרית ענבים','קרית עקרון','קרית שלמה',
+  'קרית שמונה','קרני שומרון','קשת','ראמה','ראס אל-עין','ראס עלי',
+  'ראש העין','ראש פינה','ראש צורים','ראשון לציון','רבבה','רבדים',
+  'רביבים','רביד','רגבה','רגבים','רהט','רווחה',
+  'רוויה','רוח מדבר','רוחמה','רומאנה','רומת הייב','רועי',
+  'רותם','רחוב','רחובות','רחלים','ריחאניה','ריחן',
+  'ריינה','רימונים','רינתיה','רכסים','רם-און','רמות',
+  'רמות השבים','רמות מאיר','רמות מנשה','רמות נפתלי','רמלה','רמת גן',
+  'רמת דוד','רמת הכובש','רמת הנשיא טראמפ','רמת השופט','רמת השרון','רמת יוחנן',
+  'רמת ישי','רמת מגשימים','רמת צבי','רמת רזיאל','רמת רחל','רנן',
+  'רעים','רעננה','רקפת','רשפון','רשפים','רתמים',
+  'שא-נור','שאר ישוב','שבות רחל','שבי דרום','שבי ציון','שבי שומרון',
+  'שבלי - אום אל-גנם','שגב-שלום','שדה אילן','שדה אליהו','שדה אליעזר','שדה בוקר',
+  'שדה דוד','שדה ורבורג','שדה יואב','שדה יעקב','שדה יצחק','שדה משה',
+  'שדה נחום','שדה נחמיה','שדה ניצן','שדה עוזיהו','שדה צבי','שדות ים',
+  'שדות מיכה','שדי אברהם','שדי חמד','שדי תרומות','שדמה','שדמות דבורה',
+  'שדמות מחולה','שדרות','שואבה','שובה','שובל','שוהם',
+  'שומרה','שומריה','שוקדה','שורש','שורשים','שושנת העמקים',
+  'שזור','שחר','שחרות','שחרית','שיבולים','שיזף',
+  'שיטים','שייח\' דנון','שילה','שילת','שכניה','שלווה',
+  'שלווה במדבר','שלוחות','שלומי','שלומית','שמיר','שמעה',
+  'שמרת','שמשית','שני','שניר','שעב','שעל',
+  'שעלבים','שער אפרים','שער הגולן','שער העמקים','שער מנשה','שער שומרון',
+  'שפיים','שפיר','שפר','שפרעם','שקד','שקף',
+  'שרונה','שריגים (לי-און)','שריד','שרשרת','שתולה','שתולים',
+  'תאשור','תדהר','תובל','תומר','תושיה','תימורים',
+  'תירוש','תל אביב - יפו','תל יוסף','תל יצחק','תל מונד','תל עדשים',
+  'תל ציון','תל קציר','תל שבע','תל תאומים','תלם','תלמי אליהו',
+  'תלמי אלעזר','תלמי ביל"ו','תלמי יוסף','תלמי יחיאל','תלמי יפה','תלמים',
+  'תמרה','תמרת','תנובות','תעוז','תפרח','תקומה',
+  'תקוע','תראבין א-צאנע (שבט)','תראבין א-צאנע(ישוב)','תרום',
+];
+
+// ─── Build custom dropdown with search ────────────────────────────────────
+function buildCityDrop() {
+  renderCityOptions('');
+}
+
+function renderCityOptions(query) {
+  const container = document.getElementById('city-options-list');
+  const q = query.trim();
+  const filtered = q ? ALL_CITIES.filter(c => c.includes(q)) : ALL_CITIES;
+  container.innerHTML = '';
+  if (!filtered.length) {
+    container.innerHTML = '<p class="city-no-results">לא נמצאה עיר או יישוב עם שם זה</p>';
+    return;
+  }
+  const savedCity = document.getElementById('inp-city').value;
+  filtered.forEach(city => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'city-option' + (city === savedCity ? ' active-city' : '');
+    btn.textContent = city;
+    btn.dataset.city = city;
+    btn.onclick = (e) => { e.stopPropagation(); selectCity(city); };
+    container.appendChild(btn);
+  });
+}
+
+function filterCityDrop(query) {
+  renderCityOptions(query);
+}
+
+function toggleCityDrop(e) {
+  e.stopPropagation();
+  const list = document.getElementById('city-drop-list');
+  const arrow = document.getElementById('city-drop-arrow');
+  const btn = document.getElementById('city-drop-btn');
+  const isOpen = list.classList.contains('open');
+  list.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+  if (!isOpen) {
+    setTimeout(() => {
+      const s = document.getElementById('city-search');
+      if (s) s.focus();
+    }, 50);
+  }
+}
+
+function selectCity(city) {
+  document.getElementById('inp-city').value = city;
+  const lbl = document.getElementById('city-drop-label');
+  lbl.textContent = city;
+  lbl.style.color = '#fff';
+  const btn = document.getElementById('city-drop-btn');
+  btn.classList.add('selected');
+  // Reset search
+  const si = document.getElementById('city-search');
+  if (si) si.value = '';
+  renderCityOptions('');
+  // Close
+  document.getElementById('city-drop-list').classList.remove('open');
+  document.getElementById('city-drop-arrow').classList.remove('open');
+  btn.classList.remove('open');
+  const s = load(); save({ player: { ...s.player, city } });
+  updateCityRankBadge();
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', () => {
+  document.getElementById('city-drop-list').classList.remove('open');
+  document.getElementById('city-drop-arrow').classList.remove('open');
+  document.getElementById('city-drop-btn').classList.remove('open');
+});
+
+// ─── Constants ────────────────────────────────────────────────────────────
+const MAX_ENERGY = 3;
+const RECHARGE_MS = 30 * 60 * 1000; // 30 דקות בפרודקשן
+const GAME_SEC = 60;
+
+const WAVES = [
+  { at:0,  spawnMs:1700, expandMs:2900, label:'1' },
+  { at:15, spawnMs:1100, expandMs:1900, label:'2' },
+  { at:30, spawnMs:700,  expandMs:1300, label:'3' },
+  { at:45, spawnMs:380,  expandMs:820,  label:'4' },
+];
+
+const RANKS = [
+  { min:0,    emoji:'☕', title:"ג'ובניק בממ\"ד",                sub:'ישב בממ"ד ושתה קפה',        color:'#999',      css:'rank-glow-r' },
+  { min:500,  emoji:'📢', title:'מש"ק רעש פסיבי',               sub:'מפקד עם נוכחות קולנית',    color:'var(--nb)', css:'rank-glow-b' },
+  { min:1500, emoji:'🛡️', title:'אלוף פיקוד העורף האלטרנטיבי',sub:'מגן העורף הבלתי מעורער',   color:'var(--ng)', css:'rank-glow-g' },
+];
+
+const FAKE_PLAYERS = [
+  'יוסי_קילר99','כיפת_ברזל_פרו','אבי_גנרל','דניאל_חמ"ל','גבי_מגן',
+  'אורלי_טקטיקה','צהל_לג\'נד','כפיר_מפקד','שירי_לוחמת','איתי_אופרטור',
+  'ניר_ספקופס','יעל_חזית','ארז_טקטיציאן','רועי_בליץ','מיכל_אסטרטגיה',
+];
+
+// ─── Storage ──────────────────────────────────────────────────────────────
+const LS_KEY = 'wr_state_v3';
+function load()  { try{return JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch{return{};} }
+function save(p) { localStorage.setItem(LS_KEY,JSON.stringify({...load(),...p})); }
+
+function initStorage() {
+  const s = load();
+  if (!s.cityData)     s.cityData = seedCities();
+  if (s.energy==null)  s.energy = MAX_ENERGY;
+  if (!s.lastRecharge) s.lastRecharge = Date.now();
+  if (!s.player)       s.player = {name:'',city:''};
+  if (!s.natLB)        s.natLB = seedNatLB();
+  if (!s.bestScore)    s.bestScore = 0;
+  if (!s.lastDailyReset || Date.now()-s.lastDailyReset > 86400000) {
+    s.cityData = seedCities(); s.lastDailyReset = Date.now();
+  }
+  localStorage.setItem(LS_KEY, JSON.stringify(s));
+}
+
+// Returns {cityName: {total, count}} — ranked by average (total/count)
+function seedCities() {
+  const sc = {};
+  ALL_CITIES.forEach(c => {
+    const count = Math.floor(Math.random()*8)+2; // 2-9 simulated players
+    const avg   = Math.floor(Math.random()*400)+350;
+    sc[c] = {total: avg*count, count};
+  });
+  // Boost well-known cities with more players
+  const boost = (c,extraCount,extraAvg)=>{
+    if(!sc[c]) sc[c]={total:0,count:0};
+    sc[c].count += extraCount;
+    sc[c].total += extraAvg * extraCount;
+  };
+  boost('תל אביב',  60, 580);
+  boost('ירושלים',  50, 560);
+  boost('חיפה',     35, 550);
+  boost('באר שבע',  25, 540);
+  boost('נתניה',    20, 530);
+  boost('שדרות',    18, 700); // small city but highly motivated
+  return sc;
+}
+
+function seedNatLB() {
+  return FAKE_PLAYERS.map((name,i)=>({
+    name, city: ALL_CITIES[i % ALL_CITIES.length],
+    score: 3400 - i*140 + Math.floor(Math.random()*350),
+  })).sort((a,b)=>b.score-a.score);
+}
+
+// ─── Energy ────────────────────────────────────────────────────────────────
+function getEnergy() {
+  const s = load(); let e = s.energy ?? MAX_ENERGY;
+  const gained = Math.floor((Date.now()-(s.lastRecharge||Date.now())) / RECHARGE_MS);
+  if (gained>0 && e<MAX_ENERGY) {
+    e = Math.min(MAX_ENERGY,e+gained);
+    save({energy:e, lastRecharge:(s.lastRecharge||Date.now())+gained*RECHARGE_MS});
+  }
+  return e;
+}
+function consumeEnergy() {
+  const s=load(), e=getEnergy();
+  if(e<=0) return false;
+  save({energy:e-1, lastRecharge:e===MAX_ENERGY?Date.now():s.lastRecharge});
+  return true;
+}
+function devRecharge() {
+  save({energy:MAX_ENERGY,lastRecharge:Date.now()});
+  updateWelcome();
+  toast('🔋 האנרגיה נטענה במלואה!','g');
+}
+function renderEnergy() {
+  const e=getEnergy(), slots=document.getElementById('energy-slots');
+  if(!slots) return;
+  slots.innerHTML='';
+  for(let i=0;i<MAX_ENERGY;i++){const d=document.createElement('div');d.className='energy-slot'+(i<e?' on':'');slots.appendChild(d);}
+  const lbl=document.getElementById('energy-label');
+  if(lbl){lbl.textContent=`${e}/${MAX_ENERGY} ${e?'פעיל':'אזל'}`;lbl.style.color=e?'var(--ng)':'var(--nr)';}
+  const s=load(),eta=document.getElementById('recharge-eta');
+  if(eta&&e<MAX_ENERGY&&s.lastRecharge){
+    const next=s.lastRecharge+RECHARGE_MS-Date.now();
+    if(next>0){const m=Math.floor(next/60000),sec=Math.floor((next%60000)/1000);eta.textContent=`⏳ טעינה הבאה: ${m}ד' ${sec}ש'`;}
+  } else if(eta) eta.textContent='';
+}
+
+// ─── Screens ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el){el.classList.add('active');el.scrollTop=0;}
+  if(id==='s-welcome') updateWelcome();
+}
+
+function updateWelcome() {
+  const s=load();
+  const inp=document.getElementById('inp-name');
+  if(inp && s.player?.name) inp.value=s.player.name;
+  if(s.player?.city) {
+    document.getElementById('inp-city').value = s.player.city;
+    const lbl=document.getElementById('city-drop-label');
+    if(lbl){lbl.textContent=s.player.city;lbl.style.color='#fff';}
+    document.getElementById('city-drop-btn').classList.add('selected');
+    // Mark active in list if already built
+    document.querySelectorAll('.city-option').forEach(o=>{
+      o.classList.toggle('active-city',o.dataset.city===s.player.city);
+    });
+  }
+  renderEnergy();
+  document.getElementById('w-best').textContent=(s.bestScore||0).toLocaleString('he-IL');
+  updateCityRankBadge();
+}
+
+function updateCityRankBadge() {
+  const s=load(), city=s.player?.city;
+  if(!city){document.getElementById('w-rank').textContent='#—';return;}
+  const qualified=Object.entries(s.cityData||{}).filter(([,d])=>d.count>=3).sort((a,b)=>cityAvg(b[1])-cityAvg(a[1]));
+  const rank=qualified.findIndex(([c])=>c===city)+1;
+  document.getElementById('w-rank').textContent=rank?`#${rank}`:'#—';
+}
+
+document.getElementById('inp-name').addEventListener('input',e=>{
+  const s=load();save({player:{...s.player,name:e.target.value.trim()}});
+});
+
+// ─── Game Engine ───────────────────────────────────────────────────────────
+let G={};
+
+function startGame(){
+  const name=document.getElementById('inp-name').value.trim();
+  const city=document.getElementById('inp-city').value;
+  if(!name){toast('⚠️ הזן שם קוד תחילה!','r');return;}
+  if(!city){toast('⚠️ בחר עיר תחילה!','r');return;}
+  save({player:{name,city}});
+  if(!consumeEnergy()){toast('⚡ אין אנרגיה! המתן לטעינה.','r');return;}
+
+  G={active:true,score:0,timeLeft:GAME_SEC,elapsed:0,waveIdx:0,
+     multiplier:1,multTimer:null,multCdInterval:null,multCdLeft:0,
+     combo:0,comboTimer:null,hits:0,misses:0,fakes:0,shield:false,
+     spawnTimer:null,tickInterval:null,threatId:0};
+
+  document.getElementById('gameArea').innerHTML='';
+  document.getElementById('multiplierBadge').classList.add('hidden');
+  document.getElementById('shieldBadge').classList.add('hidden');
+  document.getElementById('combo-display').classList.add('hidden');
+  document.getElementById('waveAnnounce').classList.add('hidden');
+  updateHUD();
+  showScreen('s-game');
+  G.tickInterval=setInterval(tick,1000);
+  scheduleSpawn();
+}
+
+function tick(){
+  if(!G.active) return;
+  G.timeLeft--;G.elapsed++;
+  checkWave();updateHUD();
+  if(G.timeLeft<=0) endGame();
+}
+function checkWave(){
+  const next=WAVES.filter(w=>G.elapsed>=w.at).length-1;
+  if(next>G.waveIdx){G.waveIdx=next;announceWave(WAVES[next].label);}
+}
+function currentWave(){return WAVES[Math.min(G.waveIdx,WAVES.length-1)];}
+
+function updateHUD(){
+  document.getElementById('g-score').textContent=G.score;
+  const t=document.getElementById('g-timer');
+  t.textContent=G.timeLeft;
+  t.className='font-black text-5xl font-mono-alt'+(G.timeLeft<=10?' timer-warn':'');
+  document.getElementById('g-wave').textContent=G.waveIdx+1;
+}
+
+function scheduleSpawn(){
+  if(!G.active) return;
+  const w=currentWave(), jitter=(Math.random()-.5)*300;
+  G.spawnTimer=setTimeout(()=>{
+    if(!G.active) return;
+    const r=Math.random();
+    if(r<.09) spawnFakePlane();
+    else if(r<.17) spawnMissileBonus();
+    else if(r<.23) spawnShieldBonus();
+    else spawnThreat();
+    scheduleSpawn();
+  },w.spawnMs+jitter);
+}
+
+function randPos(){
+  const a=document.getElementById('gameArea'), W=a.clientWidth, H=a.clientHeight;
+  return{x:55+Math.random()*(W-110), y:75+Math.random()*(H-130)};
+}
+
+function spawnThreat(){
+  if(!G.active) return;
+  const w=currentWave(), id='th_'+(++G.threatId), {x,y}=randPos();
+  const maxSz=55+Math.random()*35, minSz=18;
+  const el=document.createElement('div');
+  el.id=id;el.className='threat';
+  el.dataset.spawnAt=Date.now();el.dataset.expandMs=w.expandMs;el.dataset.handled='0';
+  Object.assign(el.style,{
+    left:x+'px',top:y+'px',width:minSz+'px',height:minSz+'px',
+    border:'2.5px solid var(--nr)',
+    boxShadow:'0 0 16px var(--nr),0 0 5px rgba(255,26,53,.3) inset',
+    background:'rgba(255,26,53,.14)',
+    transition:`width ${w.expandMs}ms linear,height ${w.expandMs}ms linear,box-shadow ${w.expandMs}ms ease`,
+    zIndex:'25',
+  });
+  el.innerHTML=`<span style="font-size:11px;font-weight:900;pointer-events:none;font-family:'Orbitron',monospace;">⊕</span>`;
+  [-10,-20].forEach(off=>{
+    const r=document.createElement('div');r.className='threat-ring';
+    r.style.cssText=`width:calc(100% + ${-off*2}px);height:calc(100% + ${-off*2}px);left:${off}px;top:${off}px;border-color:rgba(255,26,53,${off===-10?.4:.2});`;
+    el.appendChild(r);
+  });
+  document.getElementById('gameArea').appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(!document.getElementById(id)) return;
+    el.style.width=maxSz+'px';el.style.height=maxSz+'px';
+    el.style.boxShadow=`0 0 30px var(--nr),0 0 60px rgba(255,26,53,.4)`;
+  }));
+  el.addEventListener('transitionend',()=>{
+    if(el.dataset.handled==='0'&&document.getElementById(id)&&G.active) explodeThreat(el);
+  },{once:true});
+  const h=(e)=>{e.preventDefault();if(el.dataset.handled!=='0')return;el.dataset.handled='1';el.removeEventListener('touchstart',h);el.removeEventListener('mousedown',h);tapThreat(el);};
+  el.addEventListener('touchstart',h,{passive:false});
+  el.addEventListener('mousedown',h);
+}
+
+function tapThreat(el){
+  const elapsed=Date.now()-parseInt(el.dataset.spawnAt);
+  const progress=Math.min(elapsed/parseInt(el.dataset.expandMs),1);
+  const base=100+Math.floor((1-progress)*100);
+  const pts=Math.floor(base*G.multiplier*(1+Math.min(G.combo,8)*.08));
+  G.score+=pts;G.hits++;G.combo++;
+  clearTimeout(G.comboTimer);
+  G.comboTimer=setTimeout(()=>{G.combo=0;document.getElementById('combo-display').classList.add('hidden');},1400);
+  if(G.combo>1){document.getElementById('combo-display').classList.remove('hidden');document.getElementById('combo-val').textContent=G.combo;}
+  floatText(el,'+'+pts,'var(--ng)');
+  el.style.transition='all .18s ease';el.style.transform='translate(-50%,-50%) scale(0)';el.style.opacity='0';
+  setTimeout(()=>el.remove(),200);updateHUD();
+}
+
+function explodeThreat(el){
+  if(G.shield){
+    G.shield=false;
+    document.getElementById('shieldBadge').classList.add('hidden');
+    floatText(el,'🛡️ מגן הופעל!','#00c4ff');
+    flash('rgba(0,196,255,.3)',.4);
+    el.style.transition='all .18s';el.style.transform='translate(-50%,-50%) scale(0)';el.style.opacity='0';
+    setTimeout(()=>el.remove(),200);
+    toast('🛡️ המגן ספג את הפגיעה!','b');
+    return;
+  }
+  G.misses++;G.combo=0;document.getElementById('combo-display').classList.add('hidden');
+  flash('#200800',.5);el.style.animation='pop .3s ease both';
+  el.style.borderColor='#ff6600';el.style.boxShadow='0 0 40px #ff6600';
+  setTimeout(()=>el.remove(),320);
+}
+
+function spawnFakePlane(){
+  if(!G.active) return;
+  const id='fn_'+(++G.threatId), {x,y}=randPos();
+  const el=document.createElement('div');
+  el.id=id;el.dataset.handled='0';el.className='threat threat-fake';
+  Object.assign(el.style,{left:x+'px',top:y+'px',width:'64px',height:'64px',
+    background:'linear-gradient(135deg,#2a2a4a,#3a3a6a)',border:'2px solid #8888cc',
+    boxShadow:'0 0 20px rgba(136,136,204,.6)',flexDirection:'column',gap:'2px',zIndex:'26'});
+  el.innerHTML=`<span style="font-size:26px;line-height:1;pointer-events:none;">✈️</span><span style="font-size:8px;font-family:'Heebo',sans-serif;color:#ccc;text-align:center;line-height:1.3;pointer-events:none;font-weight:900;">אזרחי!<br>אל תיירט!</span>`;
+  const t=setTimeout(()=>el.remove(),4200);
+  const h=(e)=>{e.preventDefault();if(el.dataset.handled!=='0')return;el.dataset.handled='1';clearTimeout(t);el.removeEventListener('touchstart',h);el.removeEventListener('mousedown',h);tapFakePlane(el);};
+  el.addEventListener('touchstart',h,{passive:false});el.addEventListener('mousedown',h);
+  document.getElementById('gameArea').appendChild(el);
+}
+
+function tapFakePlane(el){
+  G.fakes++;const penalty=Math.floor(G.score*.5);G.score=Math.floor(G.score*.5);
+  document.getElementById('s-game').classList.add('shake');
+  setTimeout(()=>document.getElementById('s-game').classList.remove('shake'),520);
+  flash('rgba(255,0,50,.45)',.3);setTimeout(()=>flash('rgba(255,0,50,.35)',.25),300);
+  floatText(el,`✈️ טיס אזרחי! -${penalty}`,'#ff6600');
+  el.remove();toast('✈️ יירטת מטוס אזרחי! עונש: -50% ניקוד!','r');updateHUD();
+}
+
+function spawnMissileBonus(){
+  if(!G.active) return;
+  const id='mb_'+(++G.threatId), {x,y}=randPos();
+  const el=document.createElement('div');
+  el.id=id;el.dataset.handled='0';el.className='threat threat-wolt';
+  Object.assign(el.style,{left:x+'px',top:y+'px',width:'66px',height:'66px',
+    background:'linear-gradient(135deg,#6e1a00,#cc3300)',border:'2px solid #ff6600',
+    boxShadow:'0 0 24px rgba(255,100,0,.8)',flexDirection:'column',gap:'2px',zIndex:'26'});
+  el.innerHTML=`<span style="font-size:28px;line-height:1;pointer-events:none;">🚀</span><span style="font-size:9px;font-family:'Heebo',sans-serif;color:#fff;text-align:center;line-height:1.2;pointer-events:none;font-weight:900;">תפוס<br>x2!</span>`;
+  const t=setTimeout(()=>el.remove(),3800);
+  const h=(e)=>{e.preventDefault();if(el.dataset.handled!=='0')return;el.dataset.handled='1';clearTimeout(t);el.removeEventListener('touchstart',h);el.removeEventListener('mousedown',h);tapMissileBonus(el);};
+  el.addEventListener('touchstart',h,{passive:false});el.addEventListener('mousedown',h);
+  document.getElementById('gameArea').appendChild(el);
+}
+
+function tapMissileBonus(el){
+  G.multiplier=2;clearTimeout(G.multTimer);clearInterval(G.multCdInterval);G.multCdLeft=5;
+  const badge=document.getElementById('multiplierBadge');
+  badge.classList.remove('hidden');document.getElementById('mult-cd').textContent=G.multCdLeft;
+  G.multCdInterval=setInterval(()=>{G.multCdLeft--;const e=document.getElementById('mult-cd');if(e)e.textContent=G.multCdLeft;if(G.multCdLeft<=0)clearInterval(G.multCdInterval);},1000);
+  G.multTimer=setTimeout(()=>{G.multiplier=1;badge.classList.add('hidden');},5000);
+  floatText(el,'🚀 יירוט x2!','#ff6600');
+  el.style.transition='all .18s';el.style.transform='translate(-50%,-50%) scale(0)';el.style.opacity='0';
+  setTimeout(()=>el.remove(),200);
+}
+
+function spawnShieldBonus(){
+  if(!G.active) return;
+  const id='sb_'+(++G.threatId), {x,y}=randPos();
+  const el=document.createElement('div');
+  el.id=id;el.dataset.handled='0';el.className='threat threat-wolt';
+  Object.assign(el.style,{left:x+'px',top:y+'px',width:'66px',height:'66px',
+    background:'linear-gradient(135deg,#003366,#0066bb)',border:'2px solid #00aaff',
+    boxShadow:'0 0 24px rgba(0,170,255,.8)',flexDirection:'column',gap:'2px',zIndex:'26'});
+  el.innerHTML=`<span style="font-size:28px;line-height:1;pointer-events:none;">🛡️</span><span style="font-size:9px;font-family:'Heebo',sans-serif;color:#fff;text-align:center;line-height:1.2;pointer-events:none;font-weight:900;">מגן!<br>הגנה!</span>`;
+  const t=setTimeout(()=>el.remove(),3800);
+  const h=(e)=>{e.preventDefault();if(el.dataset.handled!=='0')return;el.dataset.handled='1';clearTimeout(t);el.removeEventListener('touchstart',h);el.removeEventListener('mousedown',h);tapShieldBonus(el);};
+  el.addEventListener('touchstart',h,{passive:false});el.addEventListener('mousedown',h);
+  document.getElementById('gameArea').appendChild(el);
+}
+
+function tapShieldBonus(el){
+  G.shield=true;
+  document.getElementById('shieldBadge').classList.remove('hidden');
+  floatText(el,'🛡️ מגן פעיל!','#00aaff');
+  el.style.transition='all .18s';el.style.transform='translate(-50%,-50%) scale(0)';el.style.opacity='0';
+  setTimeout(()=>el.remove(),200);
+  toast('🛡️ מגן פעיל – ספיגת פגיעה אחת!','b');
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function floatText(el,text,color){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;left:${el.style.left};top:calc(${el.style.top} - 22px);transform:translateX(-50%);color:${color};font-family:'Heebo',sans-serif;font-weight:900;font-size:14px;pointer-events:none;z-index:55;text-shadow:0 0 8px ${color};white-space:nowrap;animation:floatUp .78s ease both;`;
+  pop.textContent=text;
+  document.getElementById('gameArea').appendChild(pop);
+  setTimeout(()=>pop.remove(),820);
+}
+
+function flash(color,opacity){
+  const o=document.getElementById('flashOverlay');
+  o.style.background=color;o.style.opacity=opacity;
+  setTimeout(()=>{o.style.opacity=0;},140);
+}
+
+function announceWave(label){
+  const el=document.getElementById('waveAnnounce'),t=document.getElementById('wave-text');
+  t.textContent='גל '+label+'!';el.classList.remove('hidden');
+  t.style.animation='none';
+  requestAnimationFrame(()=>{t.style.animation='waveIn .4s ease both';});
+  setTimeout(()=>el.classList.add('hidden'),1100);
+}
+
+function getRank(score){
+  for(let i=RANKS.length-1;i>=0;i--) if(score>=RANKS[i].min) return RANKS[i];
+  return RANKS[0];
+}
+
+// ─── End Game ─────────────────────────────────────────────────────────────
+function endGame(){
+  G.active=false;
+  clearInterval(G.tickInterval);clearTimeout(G.spawnTimer);
+  clearTimeout(G.multTimer);clearInterval(G.multCdInterval);clearTimeout(G.comboTimer);
+  document.getElementById('gameArea').innerHTML='';
+  document.getElementById('multiplierBadge').classList.add('hidden');
+  document.getElementById('shieldBadge').classList.add('hidden');
+  document.getElementById('combo-display').classList.add('hidden');
+
+  const s=load(), score=G.score, city=s.player?.city, isRecord=score>(s.bestScore||0);
+  if(isRecord) save({bestScore:score});
+  if(city){
+    const cd=s.cityData||{};
+    if(!cd[city]) cd[city]={total:0,count:0};
+    cd[city].total+=score; cd[city].count+=1;
+    save({cityData:cd});
+  }
+  const lb=(s.natLB||[]).slice();
+  lb.push({name:s.player?.name||'לא ידוע',city:city||'?',score});
+  lb.sort((a,b)=>b.score-a.score);
+  save({natLB:lb.slice(0,20)});
+  showSummary(score,isRecord);
+}
+
+function showSummary(score,isRecord){
+  const s=load(), rank=getRank(score);
+  document.getElementById('s-score').textContent=score.toLocaleString('he-IL');
+  document.getElementById('rank-emoji').textContent=rank.emoji;
+  document.getElementById('rank-title').textContent=rank.title;
+  document.getElementById('rank-title').style.color=rank.color;
+  document.getElementById('rank-sub').textContent=rank.sub;
+
+  const card=document.getElementById('rank-card');
+  card.className='cyber-card p-5 text-center slide-in '+rank.css;
+  card.style.animationDelay='.1s';
+
+  const rec=document.getElementById('s-record');
+  rec.textContent=isRecord?'🏆 שיא אישי חדש!':`שיא אישי: ${(s.bestScore||0).toLocaleString('he-IL')}`;
+  rec.style.color=isRecord?'var(--ng)':'#666';
+
+  document.getElementById('s-hit').textContent=G.hits;
+  document.getElementById('s-miss').textContent=G.misses;
+  document.getElementById('s-fake').textContent=G.fakes;
+
+  const city=s.player?.city;
+  if(city){
+    const cd=load().cityData||{}, d=cd[city]||{total:0,count:0};
+    const avg=d.count>0?Math.round(d.total/d.count):0;
+    const need=Math.max(0,3-d.count);
+    const suffix=need>0?` (נדרשים עוד ${need} שחקנים לדירוג)`:`· ממוצע עיר: ${avg.toLocaleString('he-IL')} | ${d.count} שחקנים`;
+    document.getElementById('s-city-note').textContent=`+${score.toLocaleString('he-IL')} נוסף ל${city}! ${suffix}`;
+  }
+
+  const again=document.getElementById('btn-again'), e=getEnergy();
+  again.disabled=e<=0;again.style.opacity=e<=0?'.4':'1';
+  again.textContent=e<=0?'⚡ אין אנרגיה — המתן לטעינה':'▶ שחק שוב ▶';
+  showScreen('s-summary');
+}
+
+// ─── Leaderboard ──────────────────────────────────────────────────────────
+let activeTab='city', resetCdInterval=null, tickerInterval=null;
+function updateLB(){switchTab(activeTab);startResetCountdown();}
+
+function switchTab(tab){
+  activeTab=tab;
+  ['city','squad','national'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tc-'+t).classList.toggle('hidden',t!==tab);
+  });
+  if(tab==='city') renderCityTab();
+  if(tab==='squad') renderSquadTab();
+  if(tab==='national') renderNationalTab();
+}
+
+function cityAvg(d){return d.count>0?Math.round(d.total/d.count):0;}
+
+function renderCityTab(){
+  const s=load(), city=s.player?.city;
+  const MIN_PLAYERS=3;
+  const raw=Object.entries(s.cityData||{});
+  // Separate qualified (≥3 players) from pending
+  const qualified=raw.filter(([,d])=>d.count>=MIN_PLAYERS).sort((a,b)=>cityAvg(b[1])-cityAvg(a[1])).slice(0,12);
+  const pending=raw.filter(([,d])=>d.count>0&&d.count<MIN_PLAYERS).filter(([c])=>c===city);
+  const max=qualified[0]?cityAvg(qualified[0][1]):1;
+  const cont=document.getElementById('lb-city');cont.innerHTML='';
+
+  if(qualified.length===0){
+    cont.innerHTML='<p class="text-center text-gray-500 py-6">טרם הגיעו מספיק שחקנים לדירוג ⏳</p>';
+  }
+
+  qualified.forEach(([c,d],i)=>{
+    const avg=cityAvg(d), isMe=c===city, top3=i<3, bot2=i>=qualified.length-2;
+    const pct=Math.max(5,(avg/max)*100);
+    const medals=['🥇','🥈','🥉'];
+    const badge=top3?medals[i]:bot2?'😴':'';
+    const row=document.createElement('div');
+    row.className='cyber-card p-3'+(isMe?' border-green-600':'');
+    if(isMe) row.style.borderColor='rgba(0,255,136,.4)';
+    row.innerHTML=`
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-bold ${isMe?'ng':'text-white'}">${c}${isMe?' ← אתה':''} <span>${badge}</span></span>
+        <div class="flex items-center gap-2" style="direction:ltr;">
+          <span class="font-bold font-orb text-sm ${isMe?'ng':'text-gray-300'}">${avg.toLocaleString('he-IL')}</span>
+          <span class="text-xs text-gray-500 font-orb">#${i+1}</span>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mb-2">
+        <span class="text-xs text-gray-500">ממוצע לשחקן</span>
+        <span class="text-xs" style="color:#6677aa;">👤 ${d.count.toLocaleString('he-IL')} שחקנים</span>
+      </div>
+      <div class="lb-bar-wrap">
+        <div class="lb-bar" style="--w:${pct}%;width:${pct}%;background:${top3?'linear-gradient(90deg,var(--nb),var(--ng))':isMe?'var(--ng)':'#252540'};${top3?'box-shadow:0 0 8px var(--nb);':''}"></div>
+      </div>`;
+    cont.appendChild(row);
+  });
+
+  // Show the user's own city if it's still pending
+  if(pending.length>0){
+    const [c,d]=pending[0];
+    const need=MIN_PLAYERS-d.count;
+    const row=document.createElement('div');
+    row.className='cyber-card p-3 mt-3';
+    row.style.borderColor='rgba(255,200,0,.3)';
+    row.innerHTML=`
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-sm font-bold" style="color:#ffcc00;">${c} ← אתה</span>
+        <span class="text-xs" style="color:#ffcc00;">⏳ ממתין לדירוג</span>
+      </div>
+      <p class="text-xs text-gray-400">נדרשים עוד <b style="color:#ffcc00;">${need}</b> שחקנים מ${c} כדי להיכנס ללוח — שלח הזמנה!</p>`;
+    cont.appendChild(row);
+  }
+
+  startTicker(qualified.map(([c,d])=>[c,cityAvg(d)]));
+}
+
+let tickerIdx=0;
+function startTicker(sorted){
+  clearInterval(tickerInterval);
+  const msgs=[];
+  for(let i=1;i<Math.min(sorted.length,5);i++){
+    const gap=sorted[i-1][1]-sorted[i][1];
+    msgs.push(`⚠️ ${sorted[i][0]} מתקרבת אל ${sorted[i-1][0]}! פער: ${gap.toLocaleString('he-IL')} נק'`);
+  }
+  const s=load();
+  if(s.player?.city){
+    const r=sorted.findIndex(([c])=>c===s.player.city)+1;
+    msgs.push(`🎯 עירך (${s.player.city}) נמצאת במקום #${r}!`);
+    msgs.push(`💪 שחק שוב כדי לקדם את ${s.player.city}!`);
+  }
+  if(!msgs.length) return;
+  tickerIdx=0;
+  const el=document.getElementById('ticker');
+  const rotate=()=>{
+    if(!el) return;
+    el.style.animation='none';el.textContent=msgs[tickerIdx%msgs.length];
+    el.style.animation='tickerScroll 3s ease both';tickerIdx++;
+  };
+  rotate();tickerInterval=setInterval(rotate,3200);
+}
+
+function renderSquadTab(){
+  const s=load(), name=s.player?.name||'אתה', best=s.bestScore||0;
+  const squad=[
+    {name:'שקד',score:Math.floor(Math.random()*2000)+200,isMe:false},
+    {name:'עומר',score:Math.floor(Math.random()*2000)+200,isMe:false},
+    {name:'נועה',score:Math.floor(Math.random()*2000)+200,isMe:false},
+    {name:'ליאור',score:Math.floor(Math.random()*2000)+200,isMe:false},
+    {name,score:best,isMe:true},
+  ].sort((a,b)=>b.score-a.score);
+  const cont=document.getElementById('lb-squad');cont.innerHTML='';
+  squad.forEach((m,i)=>{
+    const r=getRank(m.score);
+    const el=document.createElement('div');
+    el.className=`cyber-card flex items-center gap-3 p-3 ${m.isMe?'border-green-700':''}`;
+    if(m.isMe) el.style.borderColor='rgba(0,255,136,.35)';
+    el.innerHTML=`
+      <span class="font-black text-xl font-orb ${i===0?'nb':'text-gray-600'}">${i===0?'🥇':'#'+(i+1)}</span>
+      <div class="flex-1">
+        <p class="font-bold text-sm ${m.isMe?'ng':'text-white'}">${m.name}${m.isMe?' <span class="text-xs text-gray-400">(אתה)</span>':''}</p>
+        <p class="text-xs text-gray-500">${r.emoji} ${r.sub}</p>
+      </div>
+      <span class="font-mono-alt font-black ${m.isMe?'ng':'text-gray-300'}" style="direction:ltr;">${m.score.toLocaleString('he-IL')}</span>`;
+    cont.appendChild(el);
+  });
+  document.getElementById('invite-box').classList.add('hidden');
+}
+
+function renderNationalTab(){
+  const s=load(), lb=(s.natLB||[]).slice(0,15), myName=s.player?.name;
+  const cont=document.getElementById('lb-national');cont.innerHTML='';
+  if(!lb.length){cont.innerHTML='<p class="text-center text-gray-600 py-10">אין נתונים עדיין — שחק את הסיבוב הראשון!</p>';return;}
+  lb.forEach((entry,i)=>{
+    const isMe=entry.name===myName, r=getRank(entry.score);
+    const medals=['🥇','🥈','🥉'];
+    const el=document.createElement('div');
+    el.className=`cyber-card flex items-center gap-3 p-3 ${isMe?'border-blue-700':''}`;
+    if(isMe) el.style.borderColor='rgba(0,170,255,.4)';
+    el.innerHTML=`
+      <span class="font-black text-xl font-orb ${i<3?'nb':'text-gray-600'}">${i<3?medals[i]:'#'+(i+1)}</span>
+      <div class="flex-1">
+        <p class="font-bold text-sm ${isMe?'nb':'text-white'}">${entry.name}${isMe?' <span class="text-xs text-gray-400">(אתה)</span>':''}</p>
+        <p class="text-xs text-gray-500">${r.emoji} ${r.sub} · ${entry.city}</p>
+      </div>
+      <span class="font-mono-alt font-black ${isMe?'nb':'text-gray-300'}" style="direction:ltr;">${entry.score.toLocaleString('he-IL')}</span>`;
+    cont.appendChild(el);
+  });
+}
+
+function startResetCountdown(){
+  clearInterval(resetCdInterval);
+  const s=load(), target=(s.lastDailyReset||Date.now())+86400000;
+  const update=()=>{
+    const rem=target-Date.now();
+    if(rem<=0){const el=document.getElementById('reset-cd');if(el)el.textContent='מתאפס...';return;}
+    const h=Math.floor(rem/3600000),m=Math.floor((rem%3600000)/60000),sec=Math.floor((rem%60000)/1000);
+    const el=document.getElementById('reset-cd');
+    if(el) el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  };
+  update();resetCdInterval=setInterval(update,1000);
+}
+
+let _inviteLink='';
+
+function genInvite(){
+  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
+  const code=Math.random().toString(36).slice(2,10).toUpperCase();
+  _inviteLink=`https://warroom-israel.app/join?squad=${encodeURIComponent(name)}&ref=${code}`;
+  document.getElementById('invite-link').textContent=_inviteLink;
+  document.getElementById('invite-box').classList.remove('hidden');
+  toast('📲 קישור הזמנה נוצר!','g');
+}
+
+function openWhatsApp(){
+  if(!_inviteLink){toast('⚠️ צור קישור קודם!','r');return;}
+  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
+  const msg=`🚀 הצטרף לחמ"ל שלי!\nשם: ${name} | שיא: ${score} ניקוד\nשחק גם אתה: ${_inviteLink}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function copyInvite(){
+  if(!_inviteLink){toast('⚠️ צור קישור קודם!','r');return;}
+  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
+  const msg=`🚀 הצטרף לחמ"ל שלי!\nשם: ${name} | שיא: ${score} ניקוד\nשחק גם אתה: ${_inviteLink}`;
+  navigator.clipboard.writeText(msg).then(()=>{
+    const btn=document.getElementById('copy-btn');
+    btn.textContent='✅ הועתק!';btn.style.background='rgba(0,255,136,.2)';btn.style.borderColor='#00ff88';
+    setTimeout(()=>{btn.textContent='📋 העתק קישור';btn.style.background='rgba(255,255,255,.1)';btn.style.borderColor='rgba(255,255,255,.2)';},2000);
+    toast('✅ הקישור הועתק ללוח!','g');
+  }).catch(()=>{
+    prompt('העתק את הקישור:',msg);
+  });
+}
+
+function toast(msg,type='b'){
+  const old=document.getElementById('_toast');if(old) old.remove();
+  const colors={r:'border-red-700 bg-red-950 text-red-200',b:'border-blue-700 bg-blue-950 text-blue-200',g:'border-green-700 bg-green-950 text-green-200'};
+  const el=document.createElement('div');
+  el.id='_toast';
+  el.className=`fixed bottom-24 right-4 left-4 z-50 p-3 rounded-lg border text-sm font-bold text-center ${colors[type]||colors.b}`;
+  el.style.cssText+=';animation:slideIn .3s ease both;';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),320);},2600);
+}
+
+// ─── Prevent events ─────────────────────────────────────────────────────────
+document.getElementById('gameArea').addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('touchmove',e=>{if(G.active) e.preventDefault();},{passive:false});
+setInterval(()=>{if(document.getElementById('s-welcome').classList.contains('active')) renderEnergy();},8000);
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+initStorage();
+buildCityDrop();
+updateWelcome();
+</script>
+</body>
+</html>
