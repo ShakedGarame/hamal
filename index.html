@@ -55,7 +55,7 @@
     @keyframes waPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
     @keyframes barGrow{from{width:0}to{width:var(--w)}}
     @keyframes tickerScroll{0%{opacity:0;transform:translateY(6px)}15%,85%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-6px)}}
-    @keyframes pulseGlow{0%,100%{box-shadow:0 0 18px rgba(0,255,136,.4),0 0 40px rgba(0,255,136,.15)}50%{box-shadow:0 0 32px rgba(0,255,136,.7),0 0 65px rgba(0,255,136,.3)}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 14px rgba(0,255,136,.45),0 0 28px rgba(0,255,136,.12)}50%{box-shadow:0 0 22px rgba(0,255,136,.65),0 0 38px rgba(0,255,136,.22)}}
     @keyframes alertPulse{0%,100%{opacity:1}50%{opacity:.35}}
     /* Shimmer via background-position — no overflow:hidden needed */
     @keyframes shimmerBg{0%{background-position:200% center}100%{background-position:-200% center}}
@@ -201,10 +201,11 @@
       </div>
 
       <!-- פרטי מפעיל -->
-      <div class="cyber-card p-4">
+      <div class="cyber-card p-4" style="border-color:rgba(0,170,255,.3);">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-lg">👤</span>
-          <span class="text-sm font-bold text-gray-300">פרטי מפעיל</span>
+          <span class="text-base">👤</span>
+          <span class="text-sm font-bold" style="color:var(--nb);">פרטי מפעיל</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(0,170,255,.3),transparent);margin-right:4px;"></div>
         </div>
 
         <label class="text-xs text-gray-500 block mb-1">שם קוד מבצעי</label>
@@ -233,33 +234,39 @@
         </div>
       </div>
 
-      <!-- אנרגיה -->
-      <div class="cyber-card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-sm font-bold text-gray-300">⚡ כשירות מבצעית</span>
-          <span id="energy-label" class="text-sm font-bold ng">3/3 פעיל</span>
-        </div>
-        <div class="flex gap-2 mb-2" id="energy-slots"></div>
-        <p id="recharge-eta" class="text-xs text-gray-600"></p>
-      </div>
-
-      <!-- סטטיסטיקה -->
+      <!-- אנרגיה + סטטיסטיקה -->
       <div class="grid grid-cols-2 gap-3">
-        <div class="cyber-card p-3 text-center">
+        <div class="cyber-card p-3" style="border-color:rgba(0,255,136,.2);">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold" style="color:var(--ng);">⚡ כשירות</span>
+            <span id="energy-label" class="text-xs font-black ng">3/3</span>
+          </div>
+          <div class="flex gap-1.5 mb-1" id="energy-slots"></div>
+          <p id="recharge-eta" class="text-xs text-gray-600 mt-1"></p>
+        </div>
+        <div class="cyber-card p-3 text-center" style="border-color:rgba(255,196,0,.2);">
           <p class="text-xs text-gray-500 mb-1">🏆 שיא אישי</p>
           <p class="text-2xl font-black nb font-orb" id="w-best">0</p>
         </div>
-        <div class="cyber-card p-3 text-center">
-          <p class="text-xs text-gray-500 mb-1">🏙️ דירוג עיר</p>
-          <p class="text-2xl font-black ng font-orb" id="w-rank">#—</p>
+      </div>
+
+      <!-- דירוג עיר -->
+      <div class="cyber-card p-3 text-center" style="border-color:rgba(0,255,136,.2);">
+        <div class="flex items-center justify-center gap-3">
+          <div>
+            <p class="text-xs text-gray-500 mb-0.5">🏙️ דירוג עיר (ממוצע)</p>
+            <p class="text-3xl font-black ng font-orb" id="w-rank">#—</p>
+          </div>
         </div>
       </div>
 
       <!-- כפתור התחלה -->
-      <button class="btn-start w-full py-4 rounded-lg text-xl font-black" id="btn-start" onclick="startGame()">
-        ▶ התחל משמרת בחמ"ל ▶
-      </button>
-      <p class="text-xs text-gray-600 text-center -mt-1">⚡ עלות: 1 אנרגיה &nbsp;·&nbsp; ⏱ 60 שניות</p>
+      <div>
+        <button class="btn-start w-full py-4 rounded-lg text-xl font-black" id="btn-start" onclick="startGame()">
+          ▶ התחל משמרת בחמ"ל ▶
+        </button>
+        <p class="text-xs text-gray-600 text-center mt-2">⚡ עלות: 1 אנרגיה &nbsp;·&nbsp; ⏱ 60 שניות</p>
+      </div>
 
       <button class="btn-blue w-full py-3 rounded-lg text-base font-bold" onclick="showScreen('s-leaderboard');updateLB();">
         🏆 לוח תוצאות ארצי
@@ -268,7 +275,7 @@
       <p class="text-xs text-gray-600 text-center">⚠️ הלוח מתאפס כל 24 שעות. הגן על עירך היום!</p>
 
       <button class="btn-ghost w-full py-2.5 rounded-lg text-xs" onclick="devRecharge()">
-        🔋 טעינת אנרגיה מלאכותית (פיתוח) — בד"כ מתמלאת כל 30 דקות
+        🔋 טעינת אנרגיה מלאכותית (פיתוח)
       </button>
     </div>
   </div>
@@ -380,14 +387,13 @@
         <div id="tc-squad" class="hidden">
           <p class="text-xs text-gray-600 text-center mt-3 mb-3">ביצועי הכיתה שלך</p>
           <div id="lb-squad" class="space-y-2"></div>
-          <button class="btn-blue w-full py-3 rounded-lg font-bold mt-4" onclick="genInvite()">📲 צור קישור הזמנה לוואטסאפ</button>
-          <div id="invite-box" class="hidden cyber-card p-3 mt-3" style="border-color:rgba(0,255,136,.25);">
-            <p class="text-xs text-gray-500 mb-2">🔗 קישור הזמנה:</p>
-            <p class="text-xs ng font-mono-alt break-all mb-3" id="invite-link"></p>
-            <div class="flex gap-2">
-              <button onclick="openWhatsApp()" class="flex-1 py-2 rounded-lg font-bold text-sm" style="background:#25D366;color:#fff;border:none;">💬 פתח וואטסאפ</button>
-              <button onclick="copyInvite()" id="copy-btn" class="flex-1 py-2 rounded-lg font-bold text-sm" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);">📋 העתק קישור</button>
-            </div>
+          <div id="invite-collapsed">
+            <button class="btn-blue w-full py-3 rounded-lg font-bold mt-4" onclick="genInvite()">📲 הזמן חבר לכיתה</button>
+          </div>
+          <div id="invite-box" class="hidden mt-3 space-y-2">
+            <button onclick="openWhatsApp()" class="w-full py-3 rounded-lg font-bold text-base" style="background:#25D366;color:#fff;border:none;">💬 שלח בוואטסאפ</button>
+            <button onclick="copyInvite()" id="copy-btn" class="w-full py-3 rounded-lg font-bold text-sm" style="background:rgba(255,255,255,.08);color:#ccc;border:1px solid rgba(255,255,255,.15);">📋 העתק הודעה ללוח</button>
+            <button onclick="document.getElementById('invite-box').classList.add('hidden');document.getElementById('invite-collapsed').classList.remove('hidden');" class="w-full py-1.5 rounded-lg text-xs text-gray-600" style="background:transparent;border:none;">ביטול</button>
           </div>
         </div>
         <div id="tc-national" class="hidden">
@@ -1300,35 +1306,42 @@ function startResetCountdown(){
   update();resetCdInterval=setInterval(update,1000);
 }
 
-let _inviteLink='';
+const GAME_URL='https://newgame-ecru.vercel.app';
+
+function _buildInviteMsg(){
+  const s=load(), name=s.player?.name||'לוחם', score=s.bestScore||0;
+  return `🚀 הצטרף לחמ"ל שלי!\n${name} הגיע ל-${score.toLocaleString('he-IL')} ניקוד 🎯\nשחק גם אתה 👇\n${GAME_URL}`;
+}
 
 function genInvite(){
-  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
-  const code=Math.random().toString(36).slice(2,10).toUpperCase();
-  _inviteLink=`https://warroom-israel.app/join?squad=${encodeURIComponent(name)}&ref=${code}`;
-  document.getElementById('invite-link').textContent=_inviteLink;
+  document.getElementById('invite-collapsed').classList.add('hidden');
   document.getElementById('invite-box').classList.remove('hidden');
-  toast('📲 קישור הזמנה נוצר!','g');
 }
 
 function openWhatsApp(){
-  if(!_inviteLink){toast('⚠️ צור קישור קודם!','r');return;}
-  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
-  const msg=`🚀 הצטרף לחמ"ל שלי!\nשם: ${name} | שיא: ${score} ניקוד\nשחק גם אתה: ${_inviteLink}`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  const msg=_buildInviteMsg();
+  const a=document.createElement('a');
+  a.href=`whatsapp://send?text=${encodeURIComponent(msg)}`;
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Fallback for desktop / if app not installed
+  setTimeout(()=>{
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  },500);
 }
 
 function copyInvite(){
-  if(!_inviteLink){toast('⚠️ צור קישור קודם!','r');return;}
-  const s=load(), name=s.player?.name||'לוחם חמ"ל', score=s.bestScore||0;
-  const msg=`🚀 הצטרף לחמ"ל שלי!\nשם: ${name} | שיא: ${score} ניקוד\nשחק גם אתה: ${_inviteLink}`;
+  const msg=_buildInviteMsg();
   navigator.clipboard.writeText(msg).then(()=>{
     const btn=document.getElementById('copy-btn');
-    btn.textContent='✅ הועתק!';btn.style.background='rgba(0,255,136,.2)';btn.style.borderColor='#00ff88';
-    setTimeout(()=>{btn.textContent='📋 העתק קישור';btn.style.background='rgba(255,255,255,.1)';btn.style.borderColor='rgba(255,255,255,.2)';},2000);
-    toast('✅ הקישור הועתק ללוח!','g');
+    const orig=btn.textContent;
+    btn.textContent='✅ הועתק!';btn.style.background='rgba(0,255,136,.15)';btn.style.color='#00ff88';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='rgba(255,255,255,.08)';btn.style.color='#ccc';},2200);
+    toast('✅ ההודעה הועתקה — הדבק בכל אפליקציה!','g');
   }).catch(()=>{
-    prompt('העתק את הקישור:',msg);
+    prompt('העתק את ההודעה:',msg);
   });
 }
 
